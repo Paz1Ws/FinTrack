@@ -1,6 +1,7 @@
-package SistemaInterfaz;
+package Interfaz;
 
 import javax.swing.*;
+import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableModel;
 import com.toedter.calendar.JDateChooser;
 
@@ -136,6 +137,24 @@ public class VistaSistema extends JFrame {
                                 new String[] {
                                                 "Fecha", "Descripción ", "Monto ", "Tipo"
                                 }));
+                // 1.11. Confirmación de actualización de monto
+                TbMovimientos.getModel().addTableModelListener(e -> {
+                        if (e.getType() == TableModelEvent.UPDATE) {
+                                int row = e.getFirstRow();
+                                int column = e.getColumn();
+                                if (column == 2) { // Si la columna modificada es "Monto"
+                                        DefaultTableModel model = (DefaultTableModel) TbMovimientos.getModel();
+                                        Object oldValue = model.getValueAt(row, column);
+                                        int confirmacion = JOptionPane.showConfirmDialog(null,
+                                                        "¿Está seguro de que desea actualizar el monto?",
+                                                        "Confirmar Actualización", JOptionPane.YES_NO_OPTION);
+
+                                        if (confirmacion != JOptionPane.YES_OPTION) {
+                                                model.setValueAt(oldValue, row, column);
+                                        }
+                                }
+                        }
+                });
                 jScrollPane1.setViewportView(TbMovimientos);
 
                 btnAgregarTrans.setText("Agregar");

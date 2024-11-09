@@ -1,6 +1,6 @@
 import Clases.ControladorSistema;
 import Clases.TransaccionManager;
-import SistemaInterfaz.*;
+import Interfaz.*;
 
 public class Sistema {
         public static void main(String[] args) {

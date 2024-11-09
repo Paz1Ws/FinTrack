@@ -1,0 +1,3 @@
+Fecha: 2024-11-09, Descripción: S, Monto: 300.00
+Fecha: 2024-11-09, Descripción: E, Monto: 3000.00
+Fecha: 2000-04-09, Descripción: d, Monto: 90.00

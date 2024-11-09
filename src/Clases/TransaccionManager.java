@@ -47,6 +47,10 @@ public class TransaccionManager {
                 .sum();
     }
 
+    public void ajustarSaldo(double montoAjuste) {
+        saldo = montoAjuste;
+    }
+
     public double getSaldo() {
         return saldo;
     }

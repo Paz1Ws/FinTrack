@@ -2,7 +2,7 @@
 import java.util.ArrayList;
 
 import Clases.ClasesComunes.Usuario;
-import SistemaInterfaz.VistaSistema;
+import Interfaz.VistaSistema;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
