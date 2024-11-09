@@ -1,13 +1,16 @@
+package Clases.ClasesComunes;
+
 public class Usuario {
     private String nombre; // Cambiable
     private String pass; // Cambiable
 
     public Usuario() {
     }
+
     public Usuario(String nombre, String pass) {
         this.nombre = nombre;
         this.pass = pass;
-    
+
     }
 
     public String getNombre() {

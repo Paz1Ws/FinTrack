@@ -1,3 +1,5 @@
+package Clases.ClasesComunes;
+
 import java.time.LocalDate;
 
 public class Transaccion {
