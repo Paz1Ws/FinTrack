@@ -3,10 +3,10 @@ package Clases.ClasesComunes;
 import java.time.LocalDate;
 
 public class Transaccion {
-    LocalDate fecha;
+    private LocalDate fecha;
     private String descripcion;
-    double monto;
-    String tipo; // "Entrada" o "Salida"
+    private double monto;
+    private String tipo;
 
     public Transaccion() {
     }
@@ -50,4 +50,13 @@ public class Transaccion {
         this.tipo = tipo;
     }
 
+    @Override
+    public String toString() {
+        return "Transaccion{" +
+                "fecha=" + fecha +
+                ", descripcion='" + descripcion + '\'' +
+                ", monto=" + monto +
+                ", tipo='" + tipo + '\'' +
+                '}';
+    }
 }

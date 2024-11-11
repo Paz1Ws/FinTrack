@@ -97,10 +97,10 @@ public class VistaSistema extends JFrame {
                                 jPanel2Layout.createParallelGroup(GroupLayout.Alignment.LEADING)
                                                 .addGroup(jPanel2Layout.createSequentialGroup()
                                                                 .addContainerGap()
-                                                                .addComponent(jLabel1, GroupLayout.PREFERRED_SIZE, 99,
+                                                                .addComponent(jLabel1, GroupLayout.PREFERRED_SIZE, 90,
                                                                                 GroupLayout.PREFERRED_SIZE)
                                                                 .addGap(18, 18, 18)
-                                                                .addComponent(txtMonto, GroupLayout.PREFERRED_SIZE, 71,
+                                                                .addComponent(txtMonto, GroupLayout.PREFERRED_SIZE, 70,
                                                                                 GroupLayout.PREFERRED_SIZE)
                                                                 .addPreferredGap(
                                                                                 LayoutStyle.ComponentPlacement.UNRELATED)

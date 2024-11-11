@@ -1,8 +1,8 @@
 package Clases.ClasesComunes;
 
 public class Usuario {
-    private String nombre; // Cambiable
-    private String pass; // Cambiable
+    private String nombre;
+    private String pass;
 
     public Usuario() {
     }
@@ -10,7 +10,6 @@ public class Usuario {
     public Usuario(String nombre, String pass) {
         this.nombre = nombre;
         this.pass = pass;
-
     }
 
     public String getNombre() {
@@ -27,5 +26,13 @@ public class Usuario {
 
     public void setPass(String pass) {
         this.pass = pass;
+    }
+
+    @Override
+    public String toString() {
+        return "Usuario{" +
+                "nombre='" + nombre + '\'' +
+                ", pass='" + pass + '\'' +
+                '}';
     }
 }
