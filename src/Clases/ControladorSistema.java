@@ -2,6 +2,8 @@ package Clases;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -14,24 +16,36 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
-
 import Clases.ClasesComunes.Transaccion;
 import Interfaz.*;
+import Main.Login;
 
 public class ControladorSistema {
     private TransaccionManager transaccionManager;
     private VistaSistema view;
+    @SuppressWarnings("unused")
+    private Login login;
 
-    public ControladorSistema(TransaccionManager transaccionManager, VistaSistema view) {
+    public ControladorSistema(TransaccionManager transaccionManager, VistaSistema view, Login login) {
         this.transaccionManager = transaccionManager;
         this.view = view;
+        this.login = login;
         initListeners();
-        view.setVisible(true);
-        actualizarSaldo();
-        actualizarTabla();
+        view.setVisible(false); // Inicialmente ocultamos la vista del sistema
+        login.setVisible(true); // Mostramos la vista de login
+
+        // Añadimos un listener para detectar cuando se cierra la ventana de login
+        login.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                // Cuando se cierra la ventana de login, mostramos la vista del sistema
+                view.setVisible(true);
+                actualizarSaldo();
+                actualizarTabla();
+            }
+        });
     }
 
     private void initListeners() {
@@ -60,14 +74,32 @@ public class ControladorSistema {
                 BtnAplicarActionPerformed();
             }
         });
-        view.getBtnGuardar().addActionListener(new ActionListener() {
+
+        view.getBtnSali().addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                btnSaliActionPerformed();
+            }
+        });
+        view.btnGuardarActionPerformed().addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 btnGuardarActionPerformed();
             }
         });
-        view.getBtnSali().addActionListener(new ActionListener() {
+        view.btnAjustarSaldoActionPerformed().addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                btnSaliActionPerformed();
+                btnAjustarSaldoActionPerformed();
+
+            }
+        });
+
+        view.btnOrdenarActionPerformed().addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ordenarTransacciones(true);
+            }
+        });
+        view.btnRetiroActionPerformed().addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                retirarSaldo();
             }
         });
 
@@ -103,7 +135,6 @@ public class ControladorSistema {
         }
 
         JOptionPane.showMessageDialog(view, "Saldo retirado: " + saldoCaja);
-
         transaccionManager.ajustarSaldo(0);
         actualizarSaldo();
     }
@@ -426,6 +457,7 @@ public class ControladorSistema {
 
     // 1.12. Confirmación de cierre de caja
     private void btnSaliActionPerformed() {
-        visualizarIngresos();
+        view.dispose();
     }
+
 }

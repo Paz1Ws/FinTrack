@@ -1,2 +1,2 @@
-Fecha: 2024-11-10, Descripción: Transaccion Negativa, Monto: 800.00, Tipo: salida
-Fecha: 2004-03-20, Descripción: Ajuste de Saldo, Monto: 1800.00, Tipo: ingreso
+Fecha: 2024-11-11, Descripción: a, Monto: 200.00, Tipo: ingreso
+Fecha: 2024-11-11, Descripción: 300, Monto: 33.00, Tipo: salida

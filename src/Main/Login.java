@@ -1,22 +1,12 @@
+package Main;
 
 import java.util.ArrayList;
-
 import Clases.ClasesComunes.Usuario;
-import Interfaz.VistaSistema;
 
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
-
-/**
- *
- * @author renar
- */
 public class Login extends javax.swing.JFrame {
         String nombre;
         String pass;
-        @SuppressWarnings("rawtypes")
+        @SuppressWarnings({ "rawtypes", "unchecked" })
         public static ArrayList<Usuario> listaDeUsuarios = new ArrayList();
 
         public Login() {
@@ -29,7 +19,6 @@ public class Login extends javax.swing.JFrame {
         }
 
         private void initComponents() {
-
                 jPanel1 = new javax.swing.JPanel();
                 jLabel1 = new javax.swing.JLabel();
                 jLabel2 = new javax.swing.JLabel();
@@ -93,7 +82,7 @@ public class Login extends javax.swing.JFrame {
                         }
                 });
 
-                txtPass.setText("jPasswordField1");
+                txtPass.setText("");
 
                 javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
                 getContentPane().setLayout(layout);
@@ -106,9 +95,8 @@ public class Login extends javax.swing.JFrame {
                                                                 .addGroup(layout.createParallelGroup(
                                                                                 javax.swing.GroupLayout.Alignment.LEADING)
                                                                                 .addGroup(layout.createSequentialGroup()
-                                                                                                .addGroup(layout
-                                                                                                                .createParallelGroup(
-                                                                                                                                javax.swing.GroupLayout.Alignment.TRAILING)
+                                                                                                .addGroup(layout.createParallelGroup(
+                                                                                                                javax.swing.GroupLayout.Alignment.TRAILING)
                                                                                                                 .addComponent(jLabel3,
                                                                                                                                 javax.swing.GroupLayout.PREFERRED_SIZE,
                                                                                                                                 71,
@@ -116,10 +104,9 @@ public class Login extends javax.swing.JFrame {
                                                                                                                 .addComponent(jLabel2))
                                                                                                 .addPreferredGap(
                                                                                                                 javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                                                                .addGroup(layout
-                                                                                                                .createParallelGroup(
-                                                                                                                                javax.swing.GroupLayout.Alignment.LEADING,
-                                                                                                                                false)
+                                                                                                .addGroup(layout.createParallelGroup(
+                                                                                                                javax.swing.GroupLayout.Alignment.LEADING,
+                                                                                                                false)
                                                                                                                 .addComponent(txtUsuario,
                                                                                                                                 javax.swing.GroupLayout.PREFERRED_SIZE,
                                                                                                                                 160,
@@ -164,8 +151,7 @@ public class Login extends javax.swing.JFrame {
                                                                                                 javax.swing.GroupLayout.PREFERRED_SIZE))
                                                                 .addPreferredGap(
                                                                                 javax.swing.LayoutStyle.ComponentPlacement.RELATED,
-                                                                                23,
-                                                                                Short.MAX_VALUE)
+                                                                                23, Short.MAX_VALUE)
                                                                 .addGroup(layout.createParallelGroup(
                                                                                 javax.swing.GroupLayout.Alignment.BASELINE)
                                                                                 .addComponent(BtnIngresar)
@@ -176,7 +162,6 @@ public class Login extends javax.swing.JFrame {
         }// </editor-fold>//GEN-END:initComponents
 
         private void txtUsuarioActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_txtUsuarioActionPerformed
-                // TODO add your handling code here:
         }// GEN-LAST:event_txtUsuarioActionPerformed
 
         private void BtnIngresarActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_BtnIngresarActionPerformed
@@ -185,30 +170,29 @@ public class Login extends javax.swing.JFrame {
                 String contrasena = new String(txtPass.getPassword());
 
                 // Verifica si las credenciales son correctas
+                boolean credencialesCorrectas = false;
                 for (Usuario u : listaDeUsuarios) {
                         if (u.getNombre().equals(usuario) && u.getPass().equals(contrasena)) {
-                                abrirSistema(); // Llama al método para abrir el sistema
-                                return;
+                                credencialesCorrectas = true;
+                                break;
                         }
                 }
-                // Si las credenciales son incorrectas, muestra un mensaje
-                javax.swing.JOptionPane.showMessageDialog(this, "Usuario o contraseña incorrectos.");
 
+                if (credencialesCorrectas) {
+                        new Thread(new Runnable() {
+                                public void run() {
+                                        dispose();
+                                }
+                        }).start();
+                } else {
+                        // Si las credenciales son incorrectas, muestra un mensaje
+                        javax.swing.JOptionPane.showMessageDialog(this, "Usuario o contraseña incorrectos.");
+                }
         }// GEN-LAST:event_BtnIngresarActionPerformed
 
         private void btnSalirActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnSalirActionPerformed
                 System.exit(0); // Cierra la aplicación
         }// GEN-LAST:event_btnSalirActionPerformed
-
-        /**
-         * Método para abrir el formulario del sistema.
-         * Crea una instancia del formulario Sistema y lo muestra.
-         */
-        private void abrirSistema() {
-                VistaSistema vistaSistema = new VistaSistema(); // Crea una nueva instancia del formulario Sistema
-                vistaSistema.setVisible(true); // Muestra el formulario
-                this.dispose(); // Cierra el formulario de login
-        }
 
         /**
          * @param args the command line arguments
