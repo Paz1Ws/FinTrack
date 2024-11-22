@@ -13,6 +13,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -392,14 +393,22 @@ public class ControladorSistema {
             }
         }
 
-        List<Transaccion> transacciones = transaccionManager.getTransacciones();
-        List<Transaccion> transaccionesFiltradas;
-        if (fechaInicio != null && fechaFin != null) {
-            transaccionesFiltradas = transacciones.stream()
-                    .filter(t -> !t.getFecha().isBefore(fechaInicio) && !t.getFecha().isAfter(fechaFin))
-                    .collect(Collectors.toList());
-        } else {
-            transaccionesFiltradas = transacciones;
+        DefaultTableModel model = (DefaultTableModel) view.getTbMovimientos().getModel();
+        List<Transaccion> transaccionesFiltradas = new ArrayList<>();
+
+        for (int i = 0; i < model.getRowCount(); i++) {
+            LocalDate fecha = LocalDate.parse(model.getValueAt(i, 0).toString(),
+                    java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            String descripcion = model.getValueAt(i, 1).toString();
+            double monto = Double.parseDouble(model.getValueAt(i, 2).toString());
+            String tipo = model.getValueAt(i, 3).toString();
+            String docRespaldo = model.getValueAt(i, 4).toString();
+            String idDoc = model.getValueAt(i, 5).toString();
+
+            if ((fechaInicio == null || !fecha.isBefore(fechaInicio))
+                    && (fechaFin == null || !fecha.isAfter(fechaFin))) {
+                transaccionesFiltradas.add(new Transaccion(fecha, descripcion, monto, tipo, docRespaldo, idDoc));
+            }
         }
 
         if (transaccionesFiltradas.isEmpty()) {
