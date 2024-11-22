@@ -68,7 +68,7 @@ public class VistaSistema extends JFrame {
                                 },
                                 new String[] {
                                                 "Fecha", "Descripción ", "Monto ", "Tipo", "Doc. Respaldo",
-                                                "Nombre Doc."
+                                                "Id Doc."
                                 }));
                 jScrollPane1.setViewportView(TbMovimientos);
                 btnAgregarTrans = new javax.swing.JButton();
@@ -123,7 +123,7 @@ public class VistaSistema extends JFrame {
                 panelTransaccion.add(rbSalida);
                 panelTransaccion.add(new JLabel("Documento de Respaldo: "));
                 panelTransaccion.add(cbDocumentoRespaldo);
-                panelTransaccion.add(new JLabel("Nombre Doc.: "));
+                panelTransaccion.add(new JLabel("Id Doc.: "));
                 panelTransaccion.add(txtIdDoc);
                 panelTransaccion.add(btnRegistrarTransaccion);
 

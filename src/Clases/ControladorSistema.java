@@ -464,7 +464,7 @@ public class ControladorSistema {
             headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
             table.addCell(headerCell);
 
-            headerCell = new PdfPCell(new Phrase("Nombre Doc.", headerFont));
+            headerCell = new PdfPCell(new Phrase("Id Doc.", headerFont));
             headerCell.setBackgroundColor(BaseColor.GRAY);
             headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
             table.addCell(headerCell);
