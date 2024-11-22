@@ -31,6 +31,18 @@ public class VistaSistema extends JFrame {
         private JButton jButton1;
         private JButton btnAjustarSaldo;
 
+        private JTextField txtFecha;
+        private JTextField txtDescripcion;
+        private JTextField txtMontoTransaccion;
+        private JTextField txtDocRespaldo;
+        private JTextField txtIdDoc;
+        private JComboBox<String> cbTipoTransaccion;
+        private JButton btnRegistrarTransaccion;
+        private JRadioButton rbIngreso;
+        private JRadioButton rbSalida;
+        private JComboBox<String> cbDocumentoRespaldo;
+        private ButtonGroup grupoTipoTransaccion;
+
         public VistaSistema() {
                 initComponents();
         }
@@ -46,6 +58,19 @@ public class VistaSistema extends JFrame {
                 jLabel3 = new javax.swing.JLabel();
                 jScrollPane1 = new javax.swing.JScrollPane();
                 TbMovimientos = new javax.swing.JTable();
+                TbMovimientos.setBackground(new java.awt.Color(255, 255, 204));
+                TbMovimientos.setModel(new javax.swing.table.DefaultTableModel(
+                                new Object[][] {
+                                                { null, null, null, null, null, null },
+                                                { null, null, null, null, null, null },
+                                                { null, null, null, null, null, null },
+                                                { null, null, null, null, null, null }
+                                },
+                                new String[] {
+                                                "Fecha", "Descripción ", "Monto ", "Tipo", "Doc. Respaldo",
+                                                "Nombre Doc."
+                                }));
+                jScrollPane1.setViewportView(TbMovimientos);
                 btnAgregarTrans = new javax.swing.JButton();
                 btnEliminar = new javax.swing.JButton();
                 jPanel3 = new javax.swing.JPanel();
@@ -63,6 +88,47 @@ public class VistaSistema extends JFrame {
                 BtnActualizar = new javax.swing.JButton();
 
                 jButton1.setText("jButton1");
+                txtFecha = new JTextField();
+                txtDescripcion = new JTextField();
+                txtMontoTransaccion = new JTextField();
+                txtDocRespaldo = new JTextField();
+                txtIdDoc = new JTextField();
+                cbTipoTransaccion = new JComboBox<>(new String[] { "Ingreso", "Salida" });
+                btnRegistrarTransaccion = new JButton("Registrar Transacción");
+
+                rbIngreso = new JRadioButton("Ingreso", true);
+                rbSalida = new JRadioButton("Salida");
+                grupoTipoTransaccion = new ButtonGroup();
+                grupoTipoTransaccion.add(rbIngreso);
+                grupoTipoTransaccion.add(rbSalida);
+
+                cbDocumentoRespaldo = new JComboBox<>(new String[] { "Boleta", "Factura" });
+                txtFecha.setToolTipText("Fecha (yyyy-MM-dd)");
+                txtDescripcion.setToolTipText("Descripción");
+                txtMontoTransaccion.setToolTipText("Monto");
+                txtDocRespaldo.setToolTipText("Documento de Respaldo");
+                txtIdDoc.setToolTipText("Nombre del Documento");
+                cbTipoTransaccion.setToolTipText("Tipo de Transacción");
+                JPanel panelTransaccion = new JPanel();
+                panelTransaccion.setLayout(new BoxLayout(panelTransaccion, BoxLayout.Y_AXIS));
+                panelTransaccion.setLayout(new BoxLayout(panelTransaccion, BoxLayout.Y_AXIS));
+                panelTransaccion.add(new JLabel("Fecha:"));
+                panelTransaccion.add(txtFecha);
+                panelTransaccion.add(new JLabel("Descripción:"));
+                panelTransaccion.add(txtDescripcion);
+                panelTransaccion.add(new JLabel("Monto:"));
+                panelTransaccion.add(txtMontoTransaccion);
+                panelTransaccion.add(new JLabel("Tipo de Transacción:"));
+                panelTransaccion.add(rbIngreso);
+                panelTransaccion.add(rbSalida);
+                panelTransaccion.add(new JLabel("Documento de Respaldo: "));
+                panelTransaccion.add(cbDocumentoRespaldo);
+                panelTransaccion.add(new JLabel("Nombre Doc.: "));
+                panelTransaccion.add(txtIdDoc);
+                panelTransaccion.add(btnRegistrarTransaccion);
+
+                // Añadir el panel a la ventana principal
+                getContentPane().add(panelTransaccion);
 
                 setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
                 setBackground(new java.awt.Color(204, 255, 204));
@@ -146,19 +212,6 @@ public class VistaSistema extends JFrame {
                 jLabel3.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
                 jLabel3.setText("Entradas y salidas");
 
-                TbMovimientos.setBackground(new java.awt.Color(255, 255, 204));
-                TbMovimientos.setModel(new javax.swing.table.DefaultTableModel(
-                                new Object[][] {
-                                                { null, null, null, null },
-                                                { null, null, null, null },
-                                                { null, null, null, null },
-                                                { null, null, null, null }
-                                },
-                                new String[] {
-                                                "Fecha", "Descripción ", "Monto ", "Tipo"
-                                }));
-                jScrollPane1.setViewportView(TbMovimientos);
-
                 btnAgregarTrans.setText("Agregar");
                 btnAgregarTrans.addActionListener(new java.awt.event.ActionListener() {
                         public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -174,7 +227,7 @@ public class VistaSistema extends JFrame {
                 });
 
                 jLabel4.setFont(new java.awt.Font("Segoe UI Black", 1, 14)); // NOI18N
-                jLabel4.setText("Fliltrar por fecha:");
+                jLabel4.setText("Filtrar por fecha:");
 
                 jLabel5.setText("Inicio:");
 
@@ -289,15 +342,6 @@ public class VistaSistema extends JFrame {
                                                                 .addContainerGap()
                                                                 .addGroup(layout.createParallelGroup(
                                                                                 javax.swing.GroupLayout.Alignment.LEADING)
-                                                                                .addGroup(layout.createSequentialGroup()
-                                                                                                .addGap(106, 106, 106)
-                                                                                                .addComponent(jLabel3,
-                                                                                                                javax.swing.GroupLayout.PREFERRED_SIZE,
-                                                                                                                169,
-                                                                                                                javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                                                                .addContainerGap(
-                                                                                                                javax.swing.GroupLayout.DEFAULT_SIZE,
-                                                                                                                Short.MAX_VALUE))
                                                                                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING,
                                                                                                 layout
                                                                                                                 .createSequentialGroup()
@@ -331,7 +375,16 @@ public class VistaSistema extends JFrame {
                                                                                                                                                 .addComponent(btnAgregarTrans)
                                                                                                                                                 .addComponent(btnEliminar))
                                                                                                                                 .addComponent(btnGuardar))
-                                                                                                                .addGap(25, 25, 25))))
+                                                                                                                .addGap(25, 25, 25))
+                                                                                .addGroup(layout.createSequentialGroup()
+                                                                                                .addGap(106, 106, 106)
+                                                                                                .addComponent(jLabel3,
+                                                                                                                javax.swing.GroupLayout.PREFERRED_SIZE,
+                                                                                                                169,
+                                                                                                                javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                                                                .addContainerGap(
+                                                                                                                javax.swing.GroupLayout.DEFAULT_SIZE,
+                                                                                                                Short.MAX_VALUE))))
                                                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout
                                                                 .createSequentialGroup()
                                                                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE,
@@ -467,4 +520,45 @@ public class VistaSistema extends JFrame {
         public JButton btnAgregarTransActionPerformed() {
                 return btnAgregarTrans;
         }
+
+        public JTextField getTxtFecha() {
+                return txtFecha;
+        }
+
+        public JTextField getTxtDescripcion() {
+                return txtDescripcion;
+        }
+
+        public JTextField getTxtMontoTransaccion() {
+                return txtMontoTransaccion;
+        }
+
+        public JComboBox<String> getCbTipoTransaccion() {
+                return cbTipoTransaccion;
+        }
+
+        public JButton getBtnRegistrarTransaccion() {
+                return btnRegistrarTransaccion;
+        }
+
+        public JTextField getTxtDocRespaldo() {
+                return txtDocRespaldo;
+        }
+
+        public JTextField getTxtIdDoc() {
+                return txtIdDoc;
+        }
+
+        public JRadioButton getRbIngreso() {
+                return rbIngreso;
+        }
+
+        public JRadioButton getRbSalida() {
+                return rbSalida;
+        }
+
+        public JComboBox<String> getCbDocumentoRespaldo() {
+                return cbDocumentoRespaldo;
+        }
+
 }

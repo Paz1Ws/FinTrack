@@ -1,9 +1,11 @@
 package Clases;
 
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -16,7 +18,25 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Element;
+import com.itextpdf.text.Font;
+import com.itextpdf.text.Image;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.Phrase;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
+
+import javax.swing.ButtonGroup;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.table.DefaultTableModel;
 import Clases.ClasesComunes.Transaccion;
 import Interfaz.*;
@@ -102,6 +122,11 @@ public class ControladorSistema {
                 retirarSaldo();
             }
         });
+        view.getBtnRegistrarTransaccion().addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                registrarTransaccion();
+            }
+        });
 
     }
 
@@ -114,7 +139,8 @@ public class ControladorSistema {
         DefaultTableModel model = (DefaultTableModel) view.getTbMovimientos().getModel();
         model.setRowCount(0); // Limpia la tabla
         for (Transaccion t : transaccionManager.getTransacciones()) {
-            model.addRow(new Object[] { t.getFecha(), t.getDescripcion(), t.getMonto(), t.getTipo() });
+            model.addRow(new Object[] { t.getFecha(), t.getDescripcion(), t.getMonto(), t.getTipo(), t.getDocRespaldo(),
+                    t.getIdDoc() });
         }
     }
 
@@ -139,7 +165,6 @@ public class ControladorSistema {
         actualizarSaldo();
     }
 
-    // 1.6. Mensaje de error para campos vacíos en una transacción
     private void btnAgregarTransActionPerformed() {
         // Solicitar la fecha de la transacción
         String fechaStr = JOptionPane.showInputDialog("Fecha (yyyy MM dd):");
@@ -187,18 +212,49 @@ public class ControladorSistema {
             }
         }
 
-        // Solicitar el tipo de transacción
-        String tipo = JOptionPane.showInputDialog("Tipo (Ingreso/Salida):");
-        while (tipo == null || tipo.trim().isEmpty()
-                || (!tipo.equalsIgnoreCase("Ingreso") && !tipo.equalsIgnoreCase("Salida"))) {
-            tipo = JOptionPane.showInputDialog("Tipo inválido. Por favor, ingrese 'Ingreso' o 'Salida':");
+        // Crear un panel personalizado para las opciones
+        JPanel panel = new JPanel(new GridLayout(3, 2));
+        ButtonGroup grupoTipo = new ButtonGroup();
+        JRadioButton rbIngreso = new JRadioButton("Ingreso", true);
+        JRadioButton rbSalida = new JRadioButton("Salida");
+        grupoTipo.add(rbIngreso);
+        grupoTipo.add(rbSalida);
+
+        JComboBox<String> comboDocumento = new JComboBox<>(new String[] { "Boleta", "Factura" });
+
+        panel.add(new JLabel("Tipo de Transacción:"));
+        panel.add(rbIngreso);
+        panel.add(new JLabel(""));
+        panel.add(rbSalida);
+        panel.add(new JLabel("Documento de Respaldo: "));
+        panel.add(comboDocumento);
+
+        // Mostrar el panel
+        int result = JOptionPane.showConfirmDialog(view, panel, "Seleccione el tipo y documento",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if (result != JOptionPane.OK_OPTION) {
+            JOptionPane.showMessageDialog(view, "Operación cancelada.");
+            return;
+        }
+
+        // Determinar los valores seleccionados
+        String tipo = rbIngreso.isSelected() ? "Ingreso" : "Salida";
+        String documento = (String) comboDocumento.getSelectedItem();
+
+        // Solicitar el número o nombre del documento
+        String idDocumento = JOptionPane
+                .showInputDialog("Ingrese el nombre o número del documento (" + documento + "):");
+        if (idDocumento == null || idDocumento.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(view, "El nombre o número del documento no puede estar vacío.");
+            return;
         }
 
         // Confirmación de registro de transacción
         int confirmacion = JOptionPane.showConfirmDialog(view, "¿Desea guardar esta transacción?", "Confirmación",
                 JOptionPane.YES_NO_OPTION);
         if (confirmacion == JOptionPane.YES_OPTION) {
-            Transaccion nuevaTransaccion = new Transaccion(fecha, descripcion, monto, tipo);
+            Transaccion nuevaTransaccion = new Transaccion(fecha, descripcion, monto, tipo, documento, idDocumento);
             transaccionManager.añadirTransaccion(nuevaTransaccion);
             actualizarSaldo();
             actualizarTabla();
@@ -266,7 +322,7 @@ public class ControladorSistema {
 
             }
 
-            Transaccion transaccionEditada = new Transaccion(fecha, descripcion, monto, tipo);
+            Transaccion transaccionEditada = new Transaccion(fecha, descripcion, monto, tipo, "", "");
             transaccionManager.editarTransaccion(filaSeleccionada, transaccionEditada);
             actualizarSaldo();
             actualizarTabla();
@@ -352,16 +408,86 @@ public class ControladorSistema {
             return;
         }
 
-        // Guardar las transacciones filtradas en el archivo
-        try (PrintWriter writer = new PrintWriter(new FileWriter("transacciones.txt"))) {
+        // Guardar las transacciones filtradas en un archivo PDF
+        Document document = new Document();
+        try {
+            PdfWriter.getInstance(document, new FileOutputStream("transacciones.pdf"));
+            document.open();
+
+            // Agregar una imagen en el lado superior izquierdo
+            Image image = Image.getInstance("assets/images.jpg");
+            image.scaleToFit(100, 100); // Ajusta el tamaño de la imagen
+            image.setAlignment(Element.ALIGN_LEFT);
+            document.add(image);
+
+            // Agregar un título
+            Font titleFont = new Font(Font.FontFamily.HELVETICA, 18, Font.BOLD, BaseColor.BLACK);
+            Paragraph title = new Paragraph("Reporte de Transacciones", titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            document.add(title);
+
+            // Agregar un espacio
+            document.add(new Paragraph(" "));
+
+            // Crear una tabla para las transacciones
+            PdfPTable table = new PdfPTable(6); // 6 columnas
+            table.setWidthPercentage(100);
+            table.setSpacingBefore(10f);
+            table.setSpacingAfter(10f);
+
+            // Encabezados de la tabla
+            Font headerFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD, BaseColor.WHITE);
+            PdfPCell headerCell;
+
+            headerCell = new PdfPCell(new Phrase("Fecha", headerFont));
+            headerCell.setBackgroundColor(BaseColor.GRAY);
+            headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            table.addCell(headerCell);
+
+            headerCell = new PdfPCell(new Phrase("Descripción", headerFont));
+            headerCell.setBackgroundColor(BaseColor.GRAY);
+            headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            table.addCell(headerCell);
+
+            headerCell = new PdfPCell(new Phrase("Monto", headerFont));
+            headerCell.setBackgroundColor(BaseColor.GRAY);
+            headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            table.addCell(headerCell);
+
+            headerCell = new PdfPCell(new Phrase("Tipo", headerFont));
+            headerCell.setBackgroundColor(BaseColor.GRAY);
+            headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            table.addCell(headerCell);
+
+            headerCell = new PdfPCell(new Phrase("Doc. Respaldo", headerFont));
+            headerCell.setBackgroundColor(BaseColor.GRAY);
+            headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            table.addCell(headerCell);
+
+            headerCell = new PdfPCell(new Phrase("Nombre Doc.", headerFont));
+            headerCell.setBackgroundColor(BaseColor.GRAY);
+            headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            table.addCell(headerCell);
+
+            // Agregar las transacciones a la tabla
+            Font cellFont = new Font(Font.FontFamily.HELVETICA, 12, Font.NORMAL, BaseColor.BLACK);
             for (Transaccion t : transaccionesFiltradas) {
-                writer.printf("Fecha: %s, Descripción: %s, Monto: %.2f, Tipo: %s%n",
-                        t.getFecha(), t.getDescripcion(), t.getMonto(), t.getTipo());
+                table.addCell(new PdfPCell(new Phrase(t.getFecha().toString(), cellFont)));
+                table.addCell(new PdfPCell(new Phrase(t.getDescripcion(), cellFont)));
+                table.addCell(new PdfPCell(new Phrase(String.format("%.2f", t.getMonto()), cellFont)));
+                table.addCell(new PdfPCell(new Phrase(t.getTipo(), cellFont)));
+                table.addCell(new PdfPCell(new Phrase(t.getDocRespaldo(), cellFont)));
+                table.addCell(new PdfPCell(new Phrase(t.getIdDoc(), cellFont)));
             }
+
+            document.add(table);
+
             JOptionPane.showMessageDialog(view, "Transacciones guardadas exitosamente en: "
-                    + new java.io.File("transacciones.txt").getAbsolutePath());
-        } catch (IOException e) {
+                    + new java.io.File("transacciones.pdf").getAbsolutePath());
+        } catch (DocumentException | IOException e) {
             JOptionPane.showMessageDialog(view, "Error al guardar las transacciones: " + e.getMessage());
+        } finally {
+            document.close();
         }
     }
 
@@ -452,6 +578,37 @@ public class ControladorSistema {
         model.setRowCount(0); // Limpia la tabla
         for (Transaccion t : transacciones) {
             model.addRow(new Object[] { t.getFecha(), t.getDescripcion(), t.getMonto(), t.getTipo() });
+        }
+    }
+
+    private void registrarTransaccion() {
+        try {
+            String fechaStr = view.getTxtFecha().getText();
+            LocalDate fecha = LocalDate.parse(fechaStr, java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
+            String descripcion = view.getTxtDescripcion().getText();
+            if (descripcion.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(view, "El campo 'Descripción' no puede estar vacío.");
+                return;
+            }
+
+            double monto = Double.parseDouble(view.getTxtMontoTransaccion().getText());
+            if (monto <= 0) {
+                JOptionPane.showMessageDialog(view, "El monto debe ser mayor que cero.");
+                return;
+            }
+
+            String tipo = (String) view.getCbTipoTransaccion().getSelectedItem();
+
+            Transaccion nuevaTransaccion = new Transaccion(fecha, descripcion, monto, tipo, "", "");
+            transaccionManager.añadirTransaccion(nuevaTransaccion);
+            actualizarSaldo();
+            actualizarTabla();
+            JOptionPane.showMessageDialog(view, "Transacción registrada exitosamente.");
+        } catch (DateTimeParseException e) {
+            JOptionPane.showMessageDialog(view, "Formato de fecha incorrecto. Use yyyy-MM-dd.");
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(view, "Monto inválido. Por favor, ingrese un número.");
         }
     }
 
