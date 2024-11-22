@@ -17,7 +17,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.itextpdf.text.BaseColor;
@@ -161,106 +163,138 @@ public class ControladorSistema {
             return;
         }
 
-        JOptionPane.showMessageDialog(view, "Saldo retirado: " + saldoCaja);
-        transaccionManager.ajustarSaldo(0);
-        actualizarSaldo();
+        // Solicitar la contraseña de autorización
+        String password = JOptionPane.showInputDialog(view, "Ingrese la contraseña de autorización:", "Ajuste de Saldo",
+                JOptionPane.PLAIN_MESSAGE);
+
+        // Validar la contraseña
+        if (password != null && password.equals("FINTRACK123")) {
+            JOptionPane.showMessageDialog(view, "Saldo retirado: " + saldoCaja);
+            transaccionManager.ajustarSaldo(0);
+            actualizarSaldo();
+        } else {
+            JOptionPane.showMessageDialog(view, "Contraseña incorrecta. Retiro de saldo no autorizado.");
+        }
     }
 
     private void btnAgregarTransActionPerformed() {
-        // Solicitar la fecha de la transacción
-        String fechaStr = JOptionPane.showInputDialog("Fecha (yyyy MM dd):");
         LocalDate fecha = null;
-        if (fechaStr == null || fechaStr.trim().isEmpty()) {
-            // 1.10. Fecha automática de transacción
-            // Asignar la fecha actual si el campo está en blanco
-            fecha = LocalDate.now();
-        } else {
-            try {
-                fechaStr = fechaStr.replace(" ", "-");
-                fecha = LocalDate.parse(fechaStr, java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            } catch (DateTimeParseException e) {
-                JOptionPane.showMessageDialog(view, "Formato de fecha incorrecto. Use yyyy MM dd.");
+        String descripcion = "";
+        double monto = 0;
+        String tipo = "";
+        String documento = "";
+        final String[] idDocumento = { "" };
+
+        while (true) {
+            // Solicitar la fecha de la transacción
+            String fechaStr = JOptionPane.showInputDialog("Fecha (yyyy MM dd):", fecha != null ? fecha.toString() : "");
+            if (fechaStr == null || fechaStr.trim().isEmpty()) {
+                fecha = LocalDate.now();
+            } else {
+                try {
+                    fechaStr = fechaStr.replace(" ", "-");
+                    fecha = LocalDate.parse(fechaStr, java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                } catch (DateTimeParseException e) {
+                    JOptionPane.showMessageDialog(view, "Formato de fecha incorrecto. Use yyyy MM dd.");
+                    continue;
+                }
+            }
+
+            // Solicitar la descripción de la transacción
+            descripcion = JOptionPane.showInputDialog("Descripción:", descripcion);
+            if (descripcion == null || descripcion.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(view, "El campo 'Descripción' no puede estar vacío.");
+                continue;
+            }
+
+            // Solicitar el monto de la transacción
+            boolean validInput = false;
+            while (!validInput) {
+                try {
+                    String montoStr = JOptionPane.showInputDialog("Monto:", monto != 0 ? String.valueOf(monto) : "");
+                    if (montoStr == null || montoStr.trim().isEmpty() || montoStr.equals("0")) {
+                        JOptionPane.showMessageDialog(view, "El campo 'Monto' no puede ser cero o vacío.");
+                        continue;
+                    }
+                    monto = Double.parseDouble(montoStr);
+                    if (monto < 0) {
+                        JOptionPane.showMessageDialog(view,
+                                "El monto no puede ser negativo. Por favor, ingrese un monto positivo.");
+                    } else {
+                        validInput = true;
+                    }
+                } catch (NumberFormatException e) {
+                    JOptionPane.showMessageDialog(view, "Monto inválido. Por favor, ingrese un número.");
+                }
+            }
+
+            // Crear un panel personalizado para las opciones
+            JPanel panel = new JPanel(new GridLayout(3, 2));
+            ButtonGroup grupoTipo = new ButtonGroup();
+            JRadioButton rbIngreso = new JRadioButton("Ingreso", tipo.equals("Ingreso"));
+            JRadioButton rbSalida = new JRadioButton("Salida", tipo.equals("Salida"));
+            grupoTipo.add(rbIngreso);
+            grupoTipo.add(rbSalida);
+
+            JComboBox<String> comboDocumento = new JComboBox<>(new String[] { "Boleta", "Factura" });
+            comboDocumento.setSelectedItem(documento);
+
+            panel.add(new JLabel("Tipo de Transacción:"));
+            panel.add(rbIngreso);
+            panel.add(new JLabel(""));
+            panel.add(rbSalida);
+            panel.add(new JLabel("Documento de Respaldo: "));
+            panel.add(comboDocumento);
+
+            // Mostrar el panel
+            int result = JOptionPane.showConfirmDialog(view, panel, "Seleccione el tipo y documento",
+                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+            if (result != JOptionPane.OK_OPTION) {
+                JOptionPane.showMessageDialog(view, "Operación cancelada.");
                 return;
             }
-        }
-        // Solicitar la descripción de la transacción
-        String descripcion = JOptionPane.showInputDialog("Descripción:");
-        if (descripcion == null || descripcion.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(view, "El campo 'Descripción' no puede estar vacío.");
-            return;
-        }
 
-        // 1.7. Mensaje de error en monto negativo
-        // 1.9. Bloqueo de letras en campo de monto
-        double monto = 0;
-        boolean validInput = false;
-        while (!validInput) {
-            try {
-                String montoStr = JOptionPane.showInputDialog("Monto:");
-                if (montoStr == null || montoStr.trim().isEmpty() || montoStr.equals("0")) {
-                    JOptionPane.showMessageDialog(view, "El campo 'Monto' no puede ser cero o vacío.");
-                    return;
-                }
-                monto = Double.parseDouble(montoStr);
-                if (monto < 0) {
-                    JOptionPane.showMessageDialog(view,
-                            "El monto no puede ser negativo. Por favor, ingrese un monto positivo.");
-                } else {
-                    validInput = true;
-                }
-            } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(view, "Monto inválido. Por favor, ingrese un número.");
+            // Determinar los valores seleccionados
+            tipo = rbIngreso.isSelected() ? "Ingreso" : "Salida";
+            documento = (String) comboDocumento.getSelectedItem();
+
+            // Solicitar el número o nombre del documento
+            idDocumento[0] = JOptionPane
+                    .showInputDialog("Ingrese el nombre o número del documento (" + documento + "):", idDocumento[0]);
+            if (idDocumento[0] == null || idDocumento[0].trim().isEmpty()) {
+                JOptionPane.showMessageDialog(view, "El nombre o número del documento no puede estar vacío.");
+                continue;
             }
-        }
 
-        // Crear un panel personalizado para las opciones
-        JPanel panel = new JPanel(new GridLayout(3, 2));
-        ButtonGroup grupoTipo = new ButtonGroup();
-        JRadioButton rbIngreso = new JRadioButton("Ingreso", true);
-        JRadioButton rbSalida = new JRadioButton("Salida");
-        grupoTipo.add(rbIngreso);
-        grupoTipo.add(rbSalida);
+            // Validar que no haya IDs repetidos
+            List<Transaccion> transacciones = transaccionManager.getTransacciones();
+            boolean idRepetido = false;
+            for (Transaccion t : transacciones) {
+                if (t.getIdDoc().equals(idDocumento[0])) {
+                    JOptionPane.showMessageDialog(view,
+                            "Error: El ID del documento ya existe. Por favor, ingrese un ID único.");
+                    idRepetido = true;
+                    break;
+                }
+            }
+            if (idRepetido)
+                continue;
 
-        JComboBox<String> comboDocumento = new JComboBox<>(new String[] { "Boleta", "Factura" });
-
-        panel.add(new JLabel("Tipo de Transacción:"));
-        panel.add(rbIngreso);
-        panel.add(new JLabel(""));
-        panel.add(rbSalida);
-        panel.add(new JLabel("Documento de Respaldo: "));
-        panel.add(comboDocumento);
-
-        // Mostrar el panel
-        int result = JOptionPane.showConfirmDialog(view, panel, "Seleccione el tipo y documento",
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-
-        if (result != JOptionPane.OK_OPTION) {
-            JOptionPane.showMessageDialog(view, "Operación cancelada.");
-            return;
-        }
-
-        // Determinar los valores seleccionados
-        String tipo = rbIngreso.isSelected() ? "Ingreso" : "Salida";
-        String documento = (String) comboDocumento.getSelectedItem();
-
-        // Solicitar el número o nombre del documento
-        String idDocumento = JOptionPane
-                .showInputDialog("Ingrese el nombre o número del documento (" + documento + "):");
-        if (idDocumento == null || idDocumento.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(view, "El nombre o número del documento no puede estar vacío.");
-            return;
-        }
-
-        // Confirmación de registro de transacción
-        int confirmacion = JOptionPane.showConfirmDialog(view, "¿Desea guardar esta transacción?", "Confirmación",
-                JOptionPane.YES_NO_OPTION);
-        if (confirmacion == JOptionPane.YES_OPTION) {
-            Transaccion nuevaTransaccion = new Transaccion(fecha, descripcion, monto, tipo, documento, idDocumento);
-            transaccionManager.añadirTransaccion(nuevaTransaccion);
-            actualizarSaldo();
-            actualizarTabla();
-        } else {
-            JOptionPane.showMessageDialog(view, "Transacción cancelada.");
+            // Confirmación de registro de transacción
+            int confirmacion = JOptionPane.showConfirmDialog(view, "¿Desea guardar esta transacción?", "Confirmación",
+                    JOptionPane.YES_NO_OPTION);
+            if (confirmacion == JOptionPane.YES_OPTION) {
+                Transaccion nuevaTransaccion = new Transaccion(fecha, descripcion, monto, tipo, documento,
+                        idDocumento[0]);
+                transaccionManager.añadirTransaccion(nuevaTransaccion);
+                actualizarSaldo();
+                actualizarTabla();
+                break;
+            } else {
+                JOptionPane.showMessageDialog(view, "Transacción cancelada.");
+                return;
+            }
         }
     }
 
@@ -586,7 +620,8 @@ public class ControladorSistema {
         DefaultTableModel model = (DefaultTableModel) view.getTbMovimientos().getModel();
         model.setRowCount(0); // Limpia la tabla
         for (Transaccion t : transacciones) {
-            model.addRow(new Object[] { t.getFecha(), t.getDescripcion(), t.getMonto(), t.getTipo() });
+            model.addRow(new Object[] { t.getFecha(), t.getDescripcion(), t.getMonto(), t.getTipo(), t.getDocRespaldo(),
+                    t.getIdDoc() });
         }
     }
 
