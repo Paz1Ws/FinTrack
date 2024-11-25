@@ -1,5 +1,4 @@
 package Clases;
-
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -21,7 +20,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
@@ -33,7 +31,7 @@ import com.itextpdf.text.Phrase;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
-
+import java.sql.*;
 import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -42,6 +40,8 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.table.DefaultTableModel;
 import Clases.ClasesComunes.Transaccion;
+import Clases.ClasesComunes.TransaccionDO;
+import Clases.ClasesComunes.ConexionBDFT;
 import Interfaz.*;
 import Main.Login;
 
@@ -177,27 +177,24 @@ public class ControladorSistema {
         }
     }
 
-    private void btnAgregarTransActionPerformed() {
-        LocalDate fecha = null;
-        String descripcion = "";
-        double monto = 0;
-        String tipo = "";
-        String documento = "";
-        final String[] idDocumento = { "" };
+  private void btnAgregarTransActionPerformed() {
+    LocalDate fecha = null;
+    String descripcion = "";
+    double monto = 0;
+    String tipo = "";
+    String documento = "";
+    final String[] idDocumento = { "" };
+    TransaccionDO transaccionDO = new TransaccionDO(); // DAO para manejo de la base de datos
 
-        while (true) {
+    while (true) {
+        try {
             // Solicitar la fecha de la transacción
             String fechaStr = JOptionPane.showInputDialog("Fecha (yyyy MM dd):", fecha != null ? fecha.toString() : "");
             if (fechaStr == null || fechaStr.trim().isEmpty()) {
                 fecha = LocalDate.now();
             } else {
-                try {
-                    fechaStr = fechaStr.replace(" ", "-");
-                    fecha = LocalDate.parse(fechaStr, java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                } catch (DateTimeParseException e) {
-                    JOptionPane.showMessageDialog(view, "Formato de fecha incorrecto. Use yyyy MM dd.");
-                    continue;
-                }
+                fechaStr = fechaStr.replace(" ", "-");
+                fecha = LocalDate.parse(fechaStr, java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd"));
             }
 
             // Solicitar la descripción de la transacción
@@ -267,19 +264,13 @@ public class ControladorSistema {
                 continue;
             }
 
-            // Validar que no haya IDs repetidos
-            List<Transaccion> transacciones = transaccionManager.getTransacciones();
-            boolean idRepetido = false;
-            for (Transaccion t : transacciones) {
-                if (t.getIdDoc().equals(idDocumento[0])) {
-                    JOptionPane.showMessageDialog(view,
-                            "Error: El ID del documento ya existe. Por favor, ingrese un ID único.");
-                    idRepetido = true;
-                    break;
-                }
-            }
-            if (idRepetido)
+            // Validar que no haya IDs repetidos en la base de datos
+            List<Transaccion> transacciones = transaccionDO.leerTransacciones();
+            boolean idRepetido = transacciones.stream().anyMatch(t -> t.getIdDoc().equals(idDocumento[0]));
+            if (idRepetido) {
+                JOptionPane.showMessageDialog(view, "Error: El ID del documento ya existe. Por favor, ingrese un ID único.");
                 continue;
+            }
 
             // Confirmación de registro de transacción
             int confirmacion = JOptionPane.showConfirmDialog(view, "¿Desea guardar esta transacción?", "Confirmación",
@@ -287,7 +278,9 @@ public class ControladorSistema {
             if (confirmacion == JOptionPane.YES_OPTION) {
                 Transaccion nuevaTransaccion = new Transaccion(fecha, descripcion, monto, tipo, documento,
                         idDocumento[0]);
+                transaccionDO.crearTransaccion(nuevaTransaccion);
                 transaccionManager.añadirTransaccion(nuevaTransaccion);
+                JOptionPane.showMessageDialog(view, "Transacción registrada con éxito.");
                 actualizarSaldo();
                 actualizarTabla();
                 break;
@@ -295,8 +288,15 @@ public class ControladorSistema {
                 JOptionPane.showMessageDialog(view, "Transacción cancelada.");
                 return;
             }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(view, "Error al interactuar con la base de datos: " + e.getMessage());
+            return;
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(view, "Error inesperado: " + e.getMessage());
+            return;
         }
     }
+  }
 
     private void btnEliminarActionPerformed() {
         int filaSeleccionada = view.getTbMovimientos().getSelectedRow();
